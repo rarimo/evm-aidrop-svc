@@ -4,8 +4,8 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/rarimo/airdrop-svc/internal/data"
-	"github.com/rarimo/airdrop-svc/internal/service/requests"
+	"github.com/rarimo/evm-airdrop-svc/internal/data"
+	"github.com/rarimo/evm-airdrop-svc/internal/service/requests"
 	zk "github.com/rarimo/zkverifier-kit"
 	"github.com/rarimo/zkverifier-kit/identity"
 	"gitlab.com/distributed_lab/ape"

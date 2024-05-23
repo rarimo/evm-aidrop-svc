@@ -1,8 +1,8 @@
 package cli
 
 import (
-	"github.com/rarimo/airdrop-svc/internal/assets"
-	"github.com/rarimo/airdrop-svc/internal/config"
+	"github.com/rarimo/evm-airdrop-svc/internal/assets"
+	"github.com/rarimo/evm-airdrop-svc/internal/config"
 	migrate "github.com/rubenv/sql-migrate"
 	"gitlab.com/distributed_lab/logan/v3/errors"
 )

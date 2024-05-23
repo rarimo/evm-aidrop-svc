@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/rarimo/airdrop-svc/resources"
+	"github.com/rarimo/evm-airdrop-svc/resources"
 	"gitlab.com/distributed_lab/ape"
 )
 

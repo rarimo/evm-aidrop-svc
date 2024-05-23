@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	val "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/rarimo/airdrop-svc/resources"
+	"github.com/rarimo/evm-airdrop-svc/resources"
 )
 
 func NewCreateAirdrop(r *http.Request) (req resources.CreateAirdropRequest, err error) {
