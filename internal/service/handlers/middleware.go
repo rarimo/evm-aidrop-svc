@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/rarimo/airdrop-svc/internal/data"
+	"github.com/rarimo/evm-airdrop-svc/internal/data"
 	"gitlab.com/distributed_lab/kit/pgdb"
 )
 

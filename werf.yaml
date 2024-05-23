@@ -1,13 +1,13 @@
 configVersion: 1
-project: "airdrop-svc"
+project: "evm-airdrop-svc"
 ---
 image: builder
 from: golang:1.22-alpine
 docker:
-  WORKDIR: /go/src/github.com/rarimo/airdrop-svc
+  WORKDIR: /go/src/github.com/rarimo/evm-airdrop-svc
 git:
   - add: /
-    to: /go/src/github.com/rarimo/airdrop-svc
+    to: /go/src/github.com/rarimo/evm-airdrop-svc
     stageDependencies:
       install:
         - go.mod
@@ -20,30 +20,30 @@ shell:
     - export CGO_ENABLED=1
     - export GO111MODULE=on
     - export GOOS=linux
-    - cd /go/src/github.com/rarimo/airdrop-svc
+    - cd /go/src/github.com/rarimo/evm-airdrop-svc
     - go mod tidy
     - go mod vendor
   setup:
     - export CGO_ENABLED=1
     - export GO111MODULE=on
     - export GOOS=linux
-    - cd /go/src/github.com/rarimo/airdrop-svc
-    - go build -o /usr/local/bin/airdrop-svc /go/src/github.com/rarimo/airdrop-svc
+    - cd /go/src/github.com/rarimo/evm-airdrop-svc
+    - go build -o /usr/local/bin/evm-airdrop-svc /go/src/github.com/rarimo/evm-airdrop-svc
 
 ---
 image: service
 from: alpine:3.9
 docker:
-  ENTRYPOINT: airdrop-svc
+  ENTRYPOINT: evm-airdrop-svc
 shell:
   setup:
     - apk add --no-cache ca-certificates
 import:
   - image: builder
-    add: /usr/local/bin/airdrop-svc
-    to: /usr/local/bin/airdrop-svc
+    add: /usr/local/bin/evm-airdrop-svc
+    to: /usr/local/bin/evm-airdrop-svc
     after: setup
   - image: builder
-    add: /go/src/github.com/rarimo/airdrop-svc/verification_key.json
+    add: /go/src/github.com/rarimo/evm-airdrop-svc/verification_key.json
     to: /verification_key.json
     after: setup

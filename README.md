@@ -1,4 +1,4 @@
-# airdrop-svc
+# evm-airdrop-svc
 
 ## Description
 
@@ -7,8 +7,8 @@ Service to manage airdrops for passport ZK-proofs
 ## Install
 
 ```
-git clone github.com/rarimo/airdrop-svc
-cd airdrop-svc
+git clone github.com/rarimo/evm-airdrop-svc
+cd evm-airdrop-svc
 go build main.go
 export KV_VIPER_FILE=./config.yaml
 ./main migrate up
@@ -17,7 +17,7 @@ export KV_VIPER_FILE=./config.yaml
 
 ## API documentation
 
-[Online docs](https://rarimo.github.io/airdrop-svc/) are available.
+[Online docs](https://rarimo.github.io/evm-airdrop-svc/) are available.
 
 All endpoints from docs MUST be publicly accessible.
 

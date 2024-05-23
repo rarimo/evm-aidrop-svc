@@ -1,5 +1,5 @@
 {
-  "name": "airdrop-svc",
+  "name": "evm-airdrop-svc",
   "version": "1.0.0",
   "dependencies": {
     "@tokend/redoc-cli": "^0.9.9",

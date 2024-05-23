@@ -5,8 +5,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/go-chi/chi"
-	"github.com/rarimo/airdrop-svc/internal/config"
-	"github.com/rarimo/airdrop-svc/internal/service/handlers"
+	"github.com/rarimo/evm-airdrop-svc/internal/config"
+	"github.com/rarimo/evm-airdrop-svc/internal/service/handlers"
 	"gitlab.com/distributed_lab/ape"
 )
 
@@ -25,7 +25,7 @@ func Run(ctx context.Context, cfg *config.Config) {
 		),
 		handlers.DBCloneMiddleware(cfg.DB()),
 	)
-	r.Route("/integrations/airdrop-svc/airdrops", func(r chi.Router) {
+	r.Route("/integrations/evm-airdrop-svc/airdrops", func(r chi.Router) {
 		r.Post("/", handlers.CreateAirdrop)
 		r.Get("/{nullifier}", handlers.GetAirdrop)
 		r.Get("/params", handlers.GetAirdropParams)

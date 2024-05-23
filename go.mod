@@ -1,4 +1,4 @@
-module github.com/rarimo/airdrop-svc
+module github.com/rarimo/evm-airdrop-svc
 
 go 1.22
 

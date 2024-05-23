@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/rarimo/airdrop-svc/internal/config"
-	"github.com/rarimo/airdrop-svc/internal/data"
+	"github.com/rarimo/evm-airdrop-svc/internal/config"
+	"github.com/rarimo/evm-airdrop-svc/internal/data"
 	zk "github.com/rarimo/zkverifier-kit"
 	"gitlab.com/distributed_lab/logan/v3"
 )

@@ -8,9 +8,9 @@ import (
 	"syscall"
 
 	"github.com/alecthomas/kingpin"
-	"github.com/rarimo/airdrop-svc/internal/broadcaster"
-	"github.com/rarimo/airdrop-svc/internal/config"
-	"github.com/rarimo/airdrop-svc/internal/service"
+	"github.com/rarimo/evm-airdrop-svc/internal/broadcaster"
+	"github.com/rarimo/evm-airdrop-svc/internal/config"
+	"github.com/rarimo/evm-airdrop-svc/internal/service"
 	"gitlab.com/distributed_lab/kit/kv"
 	"gitlab.com/distributed_lab/logan/v3"
 )
@@ -25,7 +25,7 @@ func Run(args []string) bool {
 	var (
 		cfg            = config.New(kv.MustFromEnv())
 		log            = cfg.Log()
-		app            = kingpin.New("airdrop-svc", "")
+		app            = kingpin.New("evm-airdrop-svc", "")
 		runCmd         = app.Command("run", "run command")
 		serviceCmd     = runCmd.Command("service", "run service")
 		migrateCmd     = app.Command("migrate", "migrate command")

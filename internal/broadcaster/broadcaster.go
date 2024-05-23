@@ -1,6 +1,6 @@
 // Package broadcaster provides the functionality to broadcast transactions to
 // the blockchain. It is similar to https://github.com/rarimo/broadcaster-svc,
-// but is integrated into airdrop-svc purposely. The mentioned broadcaster does
+// but is integrated into evm-airdrop-svc purposely. The mentioned broadcaster does
 // not allow you to track even successful transaction submission.
 //
 // The reason of broadcasting implementation is the same: account sequence
@@ -19,8 +19,8 @@ import (
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/rarimo/airdrop-svc/internal/config"
-	"github.com/rarimo/airdrop-svc/internal/data"
+	"github.com/rarimo/evm-airdrop-svc/internal/config"
+	"github.com/rarimo/evm-airdrop-svc/internal/data"
 	ethermint "github.com/rarimo/rarimo-core/ethermint/types"
 	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/distributed_lab/running"

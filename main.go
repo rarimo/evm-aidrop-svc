@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/rarimo/airdrop-svc/internal/cli"
+	"github.com/rarimo/evm-airdrop-svc/internal/cli"
 )
 
 func main() {
