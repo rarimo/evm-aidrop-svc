@@ -1,6 +1,8 @@
 package config
 
 import (
+	"math/big"
+
 	"github.com/ethereum/go-ethereum/common"
 	"gitlab.com/distributed_lab/figure/v3"
 	"gitlab.com/distributed_lab/kit/comfig"
@@ -12,11 +14,11 @@ import (
 const airdropYamlKey = "airdrop"
 
 type AirdropConfiger interface {
-	AridropConfig() *AirdropConfig
+	AridropConfig() AirdropConfig
 }
 
 type AirdropConfig struct {
-	Amount       int64          `fig:"amount,required"`
+	Amount       *big.Int       `fig:"amount,required"`
 	TokenAddress common.Address `fig:"token_address,required"`
 }
 
@@ -31,7 +33,7 @@ func NewAirdropConfiger(getter kv.Getter) AirdropConfiger {
 	}
 }
 
-func (v *airdrop) AridropConfig() *AirdropConfig {
+func (v *airdrop) AridropConfig() AirdropConfig {
 	return v.once.Do(func() interface{} {
 		var result AirdropConfig
 
@@ -47,5 +49,5 @@ func (v *airdrop) AridropConfig() *AirdropConfig {
 		}
 
 		return &result
-	}).(*AirdropConfig)
+	}).(AirdropConfig)
 }
