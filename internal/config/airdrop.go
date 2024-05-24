@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/ethereum/go-ethereum/common"
 	"gitlab.com/distributed_lab/figure/v3"
 	"gitlab.com/distributed_lab/kit/comfig"
 	"gitlab.com/distributed_lab/kit/kv"
@@ -15,8 +16,8 @@ type AirdropConfiger interface {
 }
 
 type AirdropConfig struct {
-	Amount       int64  `fig:"amount,required"`
-	TokenAddress string `fig:"token_address,required"`
+	Amount       int64          `fig:"amount,required"`
+	TokenAddress common.Address `fig:"token_address,required"`
 }
 
 type airdrop struct {
@@ -36,6 +37,7 @@ func (v *airdrop) AridropConfig() *AirdropConfig {
 
 		err := figure.
 			Out(&result).
+			With(figure.BaseHooks, figure.EthereumHooks).
 			From(kv.MustGetStringMap(v.getter, airdropYamlKey)).
 			Please()
 		if err != nil {
