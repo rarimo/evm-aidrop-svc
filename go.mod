@@ -14,6 +14,7 @@ require (
 	github.com/rarimo/zkverifier-kit v0.2.1
 	github.com/rubenv/sql-migrate v1.6.1
 	gitlab.com/distributed_lab/ape v1.7.1
+	gitlab.com/distributed_lab/dig v0.0.0-20230207152643-c44f80a4294c
 	gitlab.com/distributed_lab/figure/v3 v3.1.4
 	gitlab.com/distributed_lab/kit v1.11.3
 	gitlab.com/distributed_lab/logan v3.8.1+incompatible

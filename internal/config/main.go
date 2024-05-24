@@ -13,6 +13,7 @@ type Config struct {
 	comfig.Listenerer
 	identity.VerifierProvider
 	Broadcasterer
+	AirdropConfiger
 
 	airdrop  comfig.Once
 	verifier comfig.Once
@@ -27,5 +28,6 @@ func New(getter kv.Getter) *Config {
 		Logger:           comfig.NewLogger(getter, comfig.LoggerOpts{}),
 		VerifierProvider: identity.NewVerifierProvider(getter),
 		Broadcasterer:    NewBroadcaster(getter),
+		AirdropConfiger:  NewAirdropConfiger(getter),
 	}
 }
