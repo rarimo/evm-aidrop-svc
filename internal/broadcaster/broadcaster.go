@@ -80,12 +80,8 @@ func (r *Runner) run(ctx context.Context) error {
 }
 
 func (r *Runner) waitForTxErrors(ctx context.Context) {
-	for {
-		select {
-		case errData := <-r.errChan:
-			r.updateAirdropStatus(ctx, errData.airdrop.ID, errData.tx.Hash().String(), data.TxStatusFailed)
-			return
-		}
+	for errData := range r.errChan {
+		r.updateAirdropStatus(ctx, errData.airdrop.ID, errData.tx.Hash().String(), data.TxStatusFailed)
 	}
 }
 
