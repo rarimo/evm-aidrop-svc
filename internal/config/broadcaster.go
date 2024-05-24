@@ -78,6 +78,7 @@ func (b *broadcasterer) Broadcaster() Broadcaster {
 		}
 
 		return Broadcaster{
+			RPC:        cfg.RPC,
 			PrivateKey: cfg.SenderPrivateKey,
 			Address:    address,
 			ChainID:    cfg.ChainID,

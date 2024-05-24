@@ -48,6 +48,6 @@ func (v *airdrop) AridropConfig() AirdropConfig {
 			}))
 		}
 
-		return &result
+		return result
 	}).(AirdropConfig)
 }

@@ -11,9 +11,10 @@ import (
 )
 
 const (
-	TxStatusPending   = "pending"
-	TxStatusCompleted = "completed"
-	TxStatusFailed    = "failed"
+	TxStatusPending    = "pending"
+	TxStatusInProgress = "in progress"
+	TxStatusCompleted  = "completed"
+	TxStatusFailed     = "failed"
 )
 
 const airdropsTable = "airdrops"
@@ -120,7 +121,7 @@ func (q *AirdropsQ) FilterByNullifier(nullifier string) *AirdropsQ {
 	return q
 }
 
-func (q *AirdropsQ) FilterByStatus(status string) *AirdropsQ {
-	q.selector = q.selector.Where(squirrel.Eq{"status": status})
+func (q *AirdropsQ) FilterByStatuses(statuses ...string) *AirdropsQ {
+	q.selector = q.selector.Where(squirrel.Eq{"status": statuses})
 	return q
 }

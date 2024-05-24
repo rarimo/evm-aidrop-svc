@@ -26,7 +26,7 @@ func CreateAirdrop(w http.ResponseWriter, r *http.Request) {
 
 	airdrop, err := AirdropsQ(r).
 		FilterByNullifier(nullifier).
-		FilterByStatus(data.TxStatusCompleted).
+		FilterByStatuses(data.TxStatusCompleted, data.TxStatusPending, data.TxStatusInProgress).
 		Get()
 	if err != nil {
 		Log(r).WithError(err).Error("Failed to get airdrop by nullifier")
@@ -63,5 +63,6 @@ func CreateAirdrop(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.WriteHeader(http.StatusCreated)
 	ape.Render(w, toAirdropResponse(*airdrop))
 }

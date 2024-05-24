@@ -46,7 +46,7 @@ func Run(ctx context.Context, cfg *config.Config) {
 }
 
 func (r *Runner) run(ctx context.Context) error {
-	airdrops, err := r.q.New().FilterByStatus(data.TxStatusPending).Limit(r.QueryLimit).Select()
+	airdrops, err := r.q.New().FilterByStatuses(data.TxStatusPending).Limit(r.QueryLimit).Select()
 	if err != nil {
 		return fmt.Errorf("select airdrops: %w", err)
 	}
@@ -77,6 +77,8 @@ func (r *Runner) handlePending(ctx context.Context, airdrop data.Airdrop) (err e
 	}()
 
 	r.LockNonce()
+	r.updateAirdropStatus(ctx, airdrop.ID, txHash, data.TxStatusInProgress)
+
 	tx, err := r.genTx(ctx, airdrop)
 	if err != nil {
 		return fmt.Errorf("failed to generate tx: %w", err)
@@ -189,7 +191,6 @@ func (r *Runner) getGasCosts(
 	}
 
 	gasLimit, err = r.RPC.EstimateGas(ctx, ethereum.CallMsg{
-		From:     r.Address,
 		To:       &receiver,
 		GasPrice: gasPrice,
 		Data:     txData,

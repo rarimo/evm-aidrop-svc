@@ -10,7 +10,7 @@ require (
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
 	github.com/iden3/go-rapidsnark/types v0.0.3
-	github.com/rarimo/zkverifier-kit v0.2.2-rc.1
+	github.com/rarimo/zkverifier-kit v0.2.2-rc.2
 	github.com/rubenv/sql-migrate v1.6.1
 	gitlab.com/distributed_lab/ape v1.7.1
 	gitlab.com/distributed_lab/dig v0.0.0-20230207152643-c44f80a4294c

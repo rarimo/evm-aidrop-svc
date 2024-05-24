@@ -1,5 +1,5 @@
 -- +migrate Up
-CREATE TYPE tx_status_enum AS ENUM ('pending', 'completed', 'failed');
+CREATE TYPE tx_status_enum AS ENUM ('pending', 'completed', 'failed', 'in progress');
 
 CREATE TABLE airdrops
 (
