@@ -70,11 +70,13 @@ func (r *Runner) handlePending(ctx context.Context, airdrop data.Airdrop) (err e
 	var txHash string
 
 	defer func() {
+		r.UnlockNonce()
 		if err != nil {
 			r.updateAirdropStatus(ctx, airdrop.ID, txHash, data.TxStatusFailed)
 		}
 	}()
 
+	r.LockNonce()
 	tx, err := r.genTx(ctx, airdrop)
 	if err != nil {
 		return fmt.Errorf("failed to generate tx: %w", err)
@@ -135,6 +137,7 @@ func (r *Runner) waitForTransactionMined(ctx context.Context, transaction *types
 			panic(errors.Wrap(err, "failed to mine transaction"))
 		}
 
+		r.IncrementNonce()
 		r.updateAirdropStatus(ctx, airdrop.ID, transaction.Hash().String(), data.TxStatusCompleted)
 
 		log.Debugf("was mined")
