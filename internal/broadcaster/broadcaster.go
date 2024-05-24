@@ -29,14 +29,6 @@ type Runner struct {
 	q   *data.AirdropsQ
 	config.Broadcaster
 	config.AirdropConfig
-
-	errChan chan *channelData
-}
-
-type channelData struct {
-	err     error
-	tx      *types.Transaction
-	airdrop data.Airdrop
 }
 
 func Run(ctx context.Context, cfg *config.Config) {
@@ -48,16 +40,12 @@ func Run(ctx context.Context, cfg *config.Config) {
 		q:             data.NewAirdropsQ(cfg.DB().Clone()),
 		Broadcaster:   cfg.Broadcaster(),
 		AirdropConfig: cfg.AridropConfig(),
-
-		errChan: make(chan *channelData),
 	}
 
 	running.WithBackOff(ctx, r.log, "builtin-broadcaster", r.run, 5*time.Second, 5*time.Second, 5*time.Second)
 }
 
 func (r *Runner) run(ctx context.Context) error {
-	go r.waitForTxErrors(ctx)
-
 	airdrops, err := r.q.New().FilterByStatuses(data.TxStatusPending).Limit(r.QueryLimit).Select()
 	if err != nil {
 		return fmt.Errorf("select airdrops: %w", err)
@@ -77,12 +65,6 @@ func (r *Runner) run(ctx context.Context) error {
 	}
 
 	return nil
-}
-
-func (r *Runner) waitForTxErrors(ctx context.Context) {
-	for errData := range r.errChan {
-		r.updateAirdropStatus(ctx, errData.airdrop.ID, errData.tx.Hash().String(), data.TxStatusFailed)
-	}
 }
 
 func (r *Runner) handlePending(ctx context.Context, airdrop data.Airdrop) (err error) {
@@ -155,13 +137,8 @@ func (r *Runner) waitForTransactionMined(ctx context.Context, transaction *types
 		log.Debugf("waiting to mine")
 
 		if _, err := bind.WaitMined(ctx, r.RPC, transaction); err != nil {
-			log.WithError(err).Error("Failed to wait for mined tx")
-
-			r.errChan <- &channelData{
-				err:     err,
-				tx:      transaction,
-				airdrop: airdrop,
-			}
+			log.WithError(err).WithField("transaction", transaction).Error("failed to wait for mined tx")
+			r.updateAirdropStatus(ctx, airdrop.ID, transaction.Hash().String(), data.TxStatusFailed)
 		}
 
 		r.updateAirdropStatus(ctx, airdrop.ID, transaction.Hash().String(), data.TxStatusCompleted)
