@@ -39,7 +39,7 @@ func Run(ctx context.Context, cfg *config.Config) {
 		log:           log,
 		q:             data.NewAirdropsQ(cfg.DB().Clone()),
 		Broadcaster:   cfg.Broadcaster(),
-		AirdropConfig: cfg.AridropConfig(),
+		AirdropConfig: cfg.AirdropConfig(),
 	}
 
 	running.WithBackOff(ctx, r.log, "builtin-broadcaster", r.run, 5*time.Second, 5*time.Second, 5*time.Second)

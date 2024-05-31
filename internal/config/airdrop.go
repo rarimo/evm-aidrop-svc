@@ -14,7 +14,7 @@ import (
 const airdropYamlKey = "airdrop"
 
 type AirdropConfiger interface {
-	AridropConfig() AirdropConfig
+	AirdropConfig() AirdropConfig
 }
 
 type AirdropConfig struct {
@@ -33,7 +33,7 @@ func NewAirdropConfiger(getter kv.Getter) AirdropConfiger {
 	}
 }
 
-func (v *airdrop) AridropConfig() AirdropConfig {
+func (v *airdrop) AirdropConfig() AirdropConfig {
 	return v.once.Do(func() interface{} {
 		var result AirdropConfig
 

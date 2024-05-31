@@ -5,7 +5,9 @@ import (
 	"net/http"
 
 	"github.com/rarimo/evm-airdrop-svc/internal/data"
-	"github.com/rarimo/evm-airdrop-svc/internal/service/requests"
+	"github.com/rarimo/evm-airdrop-svc/internal/service/api"
+	"github.com/rarimo/evm-airdrop-svc/internal/service/api/models"
+	"github.com/rarimo/evm-airdrop-svc/internal/service/api/requests"
 	zk "github.com/rarimo/zkverifier-kit"
 	"github.com/rarimo/zkverifier-kit/identity"
 	"gitlab.com/distributed_lab/ape"
@@ -24,12 +26,12 @@ func CreateAirdrop(w http.ResponseWriter, r *http.Request) {
 
 	nullifier := req.Data.Attributes.ZkProof.PubSignals[zk.Nullifier]
 
-	airdrop, err := AirdropsQ(r).
+	airdrop, err := api.AirdropsQ(r).
 		FilterByNullifier(nullifier).
 		FilterByStatuses(data.TxStatusCompleted, data.TxStatusPending, data.TxStatusInProgress).
 		Get()
 	if err != nil {
-		Log(r).WithError(err).Error("Failed to get airdrop by nullifier")
+		api.Log(r).WithError(err).Error("Failed to get airdrop by nullifier")
 		ape.RenderErr(w, problems.InternalError())
 		return
 	}
@@ -38,31 +40,31 @@ func CreateAirdrop(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = Verifier(r).VerifyProof(req.Data.Attributes.ZkProof, zk.WithEthereumAddress(req.Data.Attributes.Address))
+	err = api.Verifier(r).VerifyProof(req.Data.Attributes.ZkProof, zk.WithEthereumAddress(req.Data.Attributes.Address))
 	if err != nil {
 		if errors.Is(err, identity.ErrContractCall) {
-			Log(r).WithError(err).Error("Failed to verify proof")
+			api.Log(r).WithError(err).Error("Failed to verify proof")
 			ape.RenderErr(w, problems.InternalError())
 			return
 		}
 
-		Log(r).WithError(err).Info("Invalid proof")
+		api.Log(r).WithError(err).Info("Invalid proof")
 		ape.RenderErr(w, problems.BadRequest(err)...)
 		return
 	}
 
-	airdrop, err = AirdropsQ(r).Insert(data.Airdrop{
+	airdrop, err = api.AirdropsQ(r).Insert(data.Airdrop{
 		Nullifier: nullifier,
 		Address:   req.Data.Attributes.Address,
-		Amount:    AirdropAmount(r),
+		Amount:    api.AirdropConfig(r).Amount.String(),
 		Status:    data.TxStatusPending,
 	})
 	if err != nil {
-		Log(r).WithError(err).Errorf("Failed to insert airdrop")
+		api.Log(r).WithError(err).Errorf("Failed to insert airdrop")
 		ape.RenderErr(w, problems.InternalError())
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	ape.Render(w, toAirdropResponse(*airdrop))
+	ape.Render(w, models.NewAirdropResponse(*airdrop))
 }
