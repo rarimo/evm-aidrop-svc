@@ -8,9 +8,9 @@ import (
 	"syscall"
 
 	"github.com/alecthomas/kingpin"
-	"github.com/rarimo/evm-airdrop-svc/internal/broadcaster"
 	"github.com/rarimo/evm-airdrop-svc/internal/config"
 	"github.com/rarimo/evm-airdrop-svc/internal/service"
+	"github.com/rarimo/evm-airdrop-svc/internal/service/broadcaster"
 	"gitlab.com/distributed_lab/kit/kv"
 	"gitlab.com/distributed_lab/logan/v3"
 )

@@ -10,4 +10,5 @@ type ResourceType string
 const (
 	AIRDROP        ResourceType = "airdrop"
 	CREATE_AIRDROP ResourceType = "create_airdrop"
+	TRANSFER_ERC20 ResourceType = "transfer_erc20"
 )
