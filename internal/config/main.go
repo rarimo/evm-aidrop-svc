@@ -14,7 +14,7 @@ type Config struct {
 	identity.VerifierProvider
 	Broadcasterer
 	AirdropConfiger
-	PriceApiConfiger
+	PriceAPIConfiger
 
 	airdrop  comfig.Once
 	verifier comfig.Once
@@ -30,6 +30,6 @@ func New(getter kv.Getter) *Config {
 		VerifierProvider: identity.NewVerifierProvider(getter),
 		Broadcasterer:    NewBroadcaster(getter),
 		AirdropConfiger:  NewAirdropConfiger(getter),
-		PriceApiConfiger: NewPriceApiConfiger(getter),
+		PriceAPIConfiger: NewPriceApiConfiger(getter),
 	}
 }

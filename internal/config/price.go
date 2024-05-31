@@ -15,47 +15,47 @@ import (
 	"gitlab.com/distributed_lab/logan/v3/errors"
 )
 
-const priceApiYamlKey = "price_api"
+const priceAPIYamlKey = "price_api"
 
 var (
-	ErrPriceApiRequestFailed = errors.New("failed to fetch price api")
+	ErrPriceAPIRequestFailed = errors.New("failed to fetch price api")
 	ErrEmptyPrice            = errors.New("dollar price in ETH is empty")
 )
 
-type PriceApiConfiger interface {
+type PriceAPIConfiger interface {
 	PriceApiConfig() PriceApiConfig
 }
 
 type PriceApiConfig struct {
 	URL        *url.URL `fig:"url,required"`
 	Key        string   `fig:"key,required"`
-	CurrencyId string   `fig:"currency_id,required"`
+	CurrencyID string   `fig:"currency_id,required"`
 	QuoteTag   string   `fig:"quote_tag,required"`
 }
 
-type priceApi struct {
+type priceAPI struct {
 	once   comfig.Once
 	getter kv.Getter
 }
 
-func NewPriceApiConfiger(getter kv.Getter) PriceApiConfiger {
-	return &priceApi{
+func NewPriceApiConfiger(getter kv.Getter) PriceAPIConfiger {
+	return &priceAPI{
 		getter: getter,
 	}
 }
 
-func (v *priceApi) PriceApiConfig() PriceApiConfig {
+func (v *priceAPI) PriceApiConfig() PriceApiConfig {
 	return v.once.Do(func() interface{} {
 		var result PriceApiConfig
 
 		err := figure.
 			Out(&result).
 			With(figure.BaseHooks).
-			From(kv.MustGetStringMap(v.getter, priceApiYamlKey)).
+			From(kv.MustGetStringMap(v.getter, priceAPIYamlKey)).
 			Please()
 		if err != nil {
 			panic(errors.Wrap(err, "failed to figure out config", logan.F{
-				"yaml_key": priceApiYamlKey,
+				"yaml_key": priceAPIYamlKey,
 			}))
 		}
 
@@ -84,7 +84,7 @@ func (cfg PriceApiConfig) ConvertPrice() (*big.Float, error) {
 	URL := cfg.URL.JoinPath("/v2/cryptocurrency/quotes/latest")
 
 	query := URL.Query()
-	query.Set("id", cfg.CurrencyId)
+	query.Set("id", cfg.CurrencyID)
 	query.Set("convert", cfg.QuoteTag)
 
 	URL.RawQuery = query.Encode()
@@ -109,7 +109,7 @@ func (cfg PriceApiConfig) ConvertPrice() (*big.Float, error) {
 			return nil, errors.Wrap(err, "failed to read response body")
 		}
 
-		return nil, errors.From(ErrPriceApiRequestFailed, logan.F{
+		return nil, errors.From(ErrPriceAPIRequestFailed, logan.F{
 			"status": response.StatusCode,
 			"body":   string(body),
 		})
@@ -120,7 +120,7 @@ func (cfg PriceApiConfig) ConvertPrice() (*big.Float, error) {
 		return nil, errors.Wrap(err, "failed to decode response body")
 	}
 
-	dollarInEth := big.NewFloat(body.Data[cfg.CurrencyId].Quote[cfg.QuoteTag].Price)
+	dollarInEth := big.NewFloat(body.Data[cfg.CurrencyID].Quote[cfg.QuoteTag].Price)
 	if dollarInEth.Cmp(big.NewFloat(0)) == 0 {
 		return nil, ErrEmptyPrice
 	}

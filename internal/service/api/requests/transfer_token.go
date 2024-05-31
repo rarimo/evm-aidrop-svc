@@ -93,7 +93,7 @@ func VerifyPermitSignature(r *http.Request, attrs resources.TransferErc20TokenAt
 	}
 	recoveredAddr := crypto.PubkeyToAddress(*pubKey)
 
-	if bytes.Compare(recoveredAddr.Bytes(), attrs.Sender.Bytes()) != 0 {
+	if !bytes.Equal(recoveredAddr.Bytes(), attrs.Sender.Bytes()) {
 		fmt.Println(recoveredAddr.Hex())
 		fmt.Println(attrs.Sender.Hex())
 		return errors.New("recovered pubkey is invalid")
@@ -140,6 +140,9 @@ func buildMessage(r *http.Request, attrs resources.TransferErc20TokenAttributes)
 		nonce,
 		attrs.Deadline,
 	)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to pack permit args")
+	}
 
 	structHash := crypto.Keccak256(packed)
 

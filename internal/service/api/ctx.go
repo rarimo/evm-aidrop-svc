@@ -22,7 +22,7 @@ const (
 	broadcasterCtxKey
 	erc20PermitCtxKey
 	erc20PermitTransferCtxKey
-	priceApiConfigCtxKey
+	priceAPIConfigCtxKey
 )
 
 func CtxLog(entry *logan.Entry) func(context.Context) context.Context {
@@ -107,10 +107,10 @@ func ERC20PermitTransfer(r *http.Request) *contracts.ERC20TransferWithPermit {
 
 func CtxPriceApiConfig(entry config.PriceApiConfig) func(context.Context) context.Context {
 	return func(ctx context.Context) context.Context {
-		return context.WithValue(ctx, priceApiConfigCtxKey, entry)
+		return context.WithValue(ctx, priceAPIConfigCtxKey, entry)
 	}
 }
 
 func PriceApiConfig(r *http.Request) config.PriceApiConfig {
-	return r.Context().Value(priceApiConfigCtxKey).(config.PriceApiConfig)
+	return r.Context().Value(priceAPIConfigCtxKey).(config.PriceApiConfig)
 }
