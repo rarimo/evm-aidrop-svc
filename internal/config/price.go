@@ -68,7 +68,7 @@ type QuoteResponse struct {
 }
 
 type Currency struct {
-	Id     int              `json:"id"`
+	ID     int              `json:"id"`
 	Name   string           `json:"name"`
 	Symbol string           `json:"symbol"`
 	Quote  map[string]Quote `json:"quote"`
@@ -102,6 +102,7 @@ func (cfg PriceAPIConfig) ConvertPrice() (*big.Float, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to do request")
 	}
+	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
 		body, err := io.ReadAll(response.Body)
