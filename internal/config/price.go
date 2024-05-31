@@ -23,10 +23,10 @@ var (
 )
 
 type PriceAPIConfiger interface {
-	PriceApiConfig() PriceApiConfig
+	PriceAPIConfig() PriceAPIConfig
 }
 
-type PriceApiConfig struct {
+type PriceAPIConfig struct {
 	URL        *url.URL `fig:"url,required"`
 	Key        string   `fig:"key,required"`
 	CurrencyID string   `fig:"currency_id,required"`
@@ -38,15 +38,15 @@ type priceAPI struct {
 	getter kv.Getter
 }
 
-func NewPriceApiConfiger(getter kv.Getter) PriceAPIConfiger {
+func NewPriceAPIConfiger(getter kv.Getter) PriceAPIConfiger {
 	return &priceAPI{
 		getter: getter,
 	}
 }
 
-func (v *priceAPI) PriceApiConfig() PriceApiConfig {
+func (v *priceAPI) PriceAPIConfig() PriceAPIConfig {
 	return v.once.Do(func() interface{} {
-		var result PriceApiConfig
+		var result PriceAPIConfig
 
 		err := figure.
 			Out(&result).
@@ -60,7 +60,7 @@ func (v *priceAPI) PriceApiConfig() PriceApiConfig {
 		}
 
 		return result
-	}).(PriceApiConfig)
+	}).(PriceAPIConfig)
 }
 
 type QuoteResponse struct {
@@ -80,7 +80,7 @@ type Quote struct {
 }
 
 // ConvertPrice converts tokens price
-func (cfg PriceApiConfig) ConvertPrice() (*big.Float, error) {
+func (cfg PriceAPIConfig) ConvertPrice() (*big.Float, error) {
 	URL := cfg.URL.JoinPath("/v2/cryptocurrency/quotes/latest")
 
 	query := URL.Query()

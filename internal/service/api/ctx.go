@@ -105,12 +105,12 @@ func ERC20PermitTransfer(r *http.Request) *contracts.ERC20TransferWithPermit {
 	return r.Context().Value(erc20PermitTransferCtxKey).(*contracts.ERC20TransferWithPermit)
 }
 
-func CtxPriceApiConfig(entry config.PriceApiConfig) func(context.Context) context.Context {
+func CtxPriceAPIConfig(entry config.PriceAPIConfig) func(context.Context) context.Context {
 	return func(ctx context.Context) context.Context {
 		return context.WithValue(ctx, priceAPIConfigCtxKey, entry)
 	}
 }
 
-func PriceApiConfig(r *http.Request) config.PriceApiConfig {
-	return r.Context().Value(priceAPIConfigCtxKey).(config.PriceApiConfig)
+func PriceAPIConfig(r *http.Request) config.PriceAPIConfig {
+	return r.Context().Value(priceAPIConfigCtxKey).(config.PriceAPIConfig)
 }

@@ -36,7 +36,7 @@ func Run(ctx context.Context, cfg *config.Config) {
 			api.CtxAirdropConfig(cfg.AirdropConfig()),
 			api.CtxAirdropParams(cfg.Verifier().Params),
 			api.CtxBroadcaster(cfg.Broadcaster()),
-			api.CtxPriceApiConfig(cfg.PriceApiConfig()),
+			api.CtxPriceAPIConfig(cfg.PriceAPIConfig()),
 			api.CtxERC20Permit(erc20Permit),
 			api.CtxERC20PermitTransfer(erc20PermitTransfer),
 		),

@@ -132,7 +132,7 @@ func MakeTransferWithPermitTx(
 }
 
 func buildFeeTransferAmount(r *http.Request, gweiGasPrice *big.Int, gasLimit uint64) (*big.Int, error) {
-	dollarInEth, err := api.PriceApiConfig(r).ConvertPrice()
+	dollarInEth, err := api.PriceAPIConfig(r).ConvertPrice()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to convert dollar price in eth")
 	}
