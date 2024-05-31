@@ -1,0 +1,71 @@
+post:
+  tags:
+    - Transfer
+  summary: Send ERC20 transfer
+  description: "Creates and sends multicall transaction with transfer. Service takes signature from requester creates
+    transaction and sends it in the network. This call consists of:\n
+    - Permit - allows service sender to transfer from requester account \n
+    - Transfer #1 - sends tokens to the desired address\n
+    - Transfer #2 - sends part from tokens to the sender address to cover fees expenses. Transaction is created, but 
+    not awaited.\n"
+  operationId: SendTransfer
+  requestBody:
+    content:
+      application/vnd.api+json:
+        schema:
+          type: object
+          required:
+            - data
+          properties:
+            data:
+              $ref: '#/components/schemas/TransferERC20Token'
+  responses:
+    201:
+      description: Transfer was created, transaction was sent
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                $ref: '#/components/schemas/Tx'
+    400:
+      $ref: '#/components/responses/invalidParameter'
+    500:
+      $ref: '#/components/responses/internalError'
+
+get:
+  tags:
+    - Transfer
+  summary: Get transfer params
+  description: "Returns ERC20 transfer with multicall parameters. Takes all requried parameters for permit and transfer, 
+  simulates transaction and returns the calculated values"
+  operationId: GetTransferParams
+  requestBody:
+    content:
+      application/vnd.api+json:
+        schema:
+          type: object
+          required:
+            - data
+          properties:
+            data:
+              $ref: '#/components/schemas/TransferERC20Token'
+  responses:
+    200:
+      description: Transaction was done successfully, all parameters were calculated.
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                $ref: '#/components/schemas/Estimate'
+    400:
+      $ref: '#/components/responses/invalidParameter'
+    500:
+      $ref: '#/components/responses/internalError'
