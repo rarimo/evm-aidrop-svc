@@ -155,7 +155,7 @@ func (r *Runner) waitForTransactionMined(ctx context.Context, transaction *types
 
 		r.updateAirdropStatus(ctx, airdrop.ID, transaction.Hash().String(), data.TxStatusCompleted, nil)
 
-		log.Debugf("was mined sucessfully")
+		log.Debugf("was mined successfully")
 	}()
 }
 
