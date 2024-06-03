@@ -73,12 +73,12 @@ func (r *Runner) handlePending(ctx context.Context, airdrop data.Airdrop) (err e
 	defer func() {
 		r.UnlockNonce()
 		if err != nil {
-			r.updateAirdropStatus(ctx, airdrop.ID, txHash, data.TxStatusFailed)
+			r.updateAirdropStatus(ctx, airdrop.ID, txHash, data.TxStatusFailed, err)
 		}
 	}()
 
 	r.LockNonce()
-	r.updateAirdropStatus(ctx, airdrop.ID, txHash, data.TxStatusInProgress)
+	r.updateAirdropStatus(ctx, airdrop.ID, txHash, data.TxStatusInProgress, nil)
 
 	tx, err := r.genTx(ctx, airdrop)
 	if err != nil {
@@ -136,15 +136,45 @@ func (r *Runner) waitForTransactionMined(ctx context.Context, transaction *types
 	go func() {
 		log.Debugf("waiting to mine")
 
-		if _, err := bind.WaitMined(ctx, r.RPC, transaction); err != nil {
+		receipt, err := bind.WaitMined(ctx, r.RPC, transaction)
+		if err != nil {
 			log.WithError(err).WithField("transaction", transaction).Error("failed to wait for mined tx")
-			r.updateAirdropStatus(ctx, airdrop.ID, transaction.Hash().String(), data.TxStatusFailed)
+			r.updateAirdropStatus(ctx, airdrop.ID, transaction.Hash().String(), data.TxStatusFailed, err)
 		}
 
-		r.updateAirdropStatus(ctx, airdrop.ID, transaction.Hash().String(), data.TxStatusCompleted)
+		if receipt.Status != types.ReceiptStatusSuccessful {
+			txErr, err := r.getTxError(ctx, transaction, r.Address)
+			if err != nil {
+				log.WithError(err).WithField("transaction", transaction).Error("failed to get tx error")
+				r.updateAirdropStatus(ctx, airdrop.ID, transaction.Hash().String(), data.TxStatusFailed, err)
+			}
 
-		log.Debugf("was mined")
+			log.WithError(err).WithField("transaction", transaction).Error("transaction was mined with failed status")
+			r.updateAirdropStatus(ctx, airdrop.ID, transaction.Hash().String(), data.TxStatusFailed, txErr)
+		}
+
+		r.updateAirdropStatus(ctx, airdrop.ID, transaction.Hash().String(), data.TxStatusCompleted, nil)
+
+		log.Debugf("was mined sucessfully")
 	}()
+}
+
+func (r *Runner) getTxError(ctx context.Context, tx *types.Transaction, txSender common.Address) (error, error) {
+	msg := ethereum.CallMsg{
+		From:     txSender,
+		To:       tx.To(),
+		Gas:      tx.Gas(),
+		GasPrice: tx.GasPrice(),
+		Value:    tx.Value(),
+		Data:     tx.Data(),
+	}
+
+	res, err := r.RPC.CallContract(ctx, msg, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to make call")
+	}
+
+	return errors.New(string(res)), nil
 }
 
 // If we don't update tx status from pending, having the successful funds
@@ -152,16 +182,22 @@ func (r *Runner) waitForTransactionMined(ctx context.Context, transaction *types
 // double-spend may still occur, if the service is restarted before the
 // successful update. There is a better solution with file creation on context
 // cancellation and parsing it on start.
-func (r *Runner) updateAirdropStatus(ctx context.Context, id, txHash, status string) {
+func (r *Runner) updateAirdropStatus(ctx context.Context, id, txHash, status string, txErr error) {
 	running.UntilSuccess(ctx, r.log, "tx-status-updater", func(_ context.Context) (bool, error) {
 		var ptr *string
 		if txHash != "" {
 			ptr = &txHash
 		}
 
+		var errMsg *string
+		if txErr != nil {
+			msg := txErr.Error()
+			errMsg = &msg
+		}
 		err := r.q.New().Update(id, map[string]any{
 			"status":  status,
 			"tx_hash": ptr,
+			"error":   errMsg,
 		})
 
 		return err == nil, err

@@ -24,6 +24,7 @@ type Airdrop struct {
 	Nullifier string    `db:"nullifier"`
 	Address   string    `db:"address"`
 	TxHash    *string   `db:"tx_hash"`
+	Error     *string   `db:"error"`
 	Amount    string    `db:"amount"`
 	Status    string    `db:"status"`
 	CreatedAt time.Time `db:"created_at"`
