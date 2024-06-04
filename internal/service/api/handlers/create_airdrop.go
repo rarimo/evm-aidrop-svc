@@ -1,9 +1,12 @@
 package handlers
 
 import (
-	"errors"
+	stdErrors "errors"
+	"math/big"
 	"net/http"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/rarimo/evm-airdrop-svc/internal/data"
 	"github.com/rarimo/evm-airdrop-svc/internal/service/api"
 	"github.com/rarimo/evm-airdrop-svc/internal/service/api/models"
@@ -12,6 +15,7 @@ import (
 	"github.com/rarimo/zkverifier-kit/identity"
 	"gitlab.com/distributed_lab/ape"
 	"gitlab.com/distributed_lab/ape/problems"
+	"gitlab.com/distributed_lab/logan/v3"
 )
 
 // Full list of the OpenSSL signature algorithms and hash-functions is provided here:
@@ -42,7 +46,7 @@ func CreateAirdrop(w http.ResponseWriter, r *http.Request) {
 
 	err = api.Verifier(r).VerifyProof(req.Data.Attributes.ZkProof, zk.WithEthereumAddress(req.Data.Attributes.Address))
 	if err != nil {
-		if errors.Is(err, identity.ErrContractCall) {
+		if stdErrors.Is(err, identity.ErrContractCall) {
 			api.Log(r).WithError(err).Error("Failed to verify proof")
 			ape.RenderErr(w, problems.InternalError())
 			return
@@ -53,10 +57,19 @@ func CreateAirdrop(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	tokenDecimals, err := api.ERC20Permit(r).Decimals(&bind.CallOpts{})
+	if err != nil {
+		api.Log(r).WithError(err).WithFields(logan.F{
+			"address": api.AirdropConfig(r).TokenAddress,
+		}).Error("failed to get token decimals")
+		ape.RenderErr(w, problems.InternalError())
+		return
+	}
+
 	airdrop, err = api.AirdropsQ(r).Insert(data.Airdrop{
 		Nullifier: nullifier,
 		Address:   req.Data.Attributes.Address,
-		Amount:    api.AirdropConfig(r).Amount.String(),
+		Amount:    new(big.Int).Mul(api.AirdropConfig(r).Amount, math.BigPow(10, int64(tokenDecimals))).String(),
 		Status:    data.TxStatusPending,
 	})
 	if err != nil {

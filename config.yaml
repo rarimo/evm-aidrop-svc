@@ -9,7 +9,7 @@ listener:
   addr: :8000
 
 airdrop:
-  amount: amount
+  amount: amount # amount in natural numbers (1, 2, 10 etc.) decimals part is taken directly from the contract
   token_address: erc20_token_address
 
 broadcaster:
