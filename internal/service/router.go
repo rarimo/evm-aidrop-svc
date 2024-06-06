@@ -42,8 +42,7 @@ func Run(ctx context.Context, cfg *config.Config) {
 		),
 		handlers.DBCloneMiddleware(cfg.DB()),
 	)
-
-	r.Route("/integrations/evm-airdrop-svc", func(r chi.Router) {
+	r.Route(cfg.NewRouting().Prefix, func(r chi.Router) {
 		r.Route("/airdrops", func(r chi.Router) {
 			r.Post("/", handlers.CreateAirdrop)
 			r.Get("/{nullifier}", handlers.GetAirdrop)
