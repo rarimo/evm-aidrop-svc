@@ -1,0 +1,67 @@
+post:
+  tags:
+    - Transfer
+  summary: Build Permit hash
+  description: "Endpoint that build message hash for permit transfer, that has to be signer by token owner to permit
+  transfer. This message is built according to the ERC-2612 standard."
+  operationId: SendTransfer
+  requestBody:
+    content:
+      application/vnd.api+json:
+        schema:
+          type: object
+          required:
+            - data
+          properties:
+            data:
+              $ref: '#/components/schemas/BuildPermitHash'
+  responses:
+    200:
+      description: Created permit hash
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                $ref: '#/components/schemas/PermitHash'
+    400:
+      $ref: '#/components/responses/invalidParameter'
+    500:
+      $ref: '#/components/responses/internalError'
+
+get:
+  tags:
+    - Transfer
+  summary: Get transfer params
+  description: "Returns ERC20 transfer with multicall parameters. Takes all requried parameters for permit and transfer, 
+  simulates transaction and returns the calculated values"
+  operationId: GetTransferParams
+  requestBody:
+    content:
+      application/vnd.api+json:
+        schema:
+          type: object
+          required:
+            - data
+          properties:
+            data:
+              $ref: '#/components/schemas/TransferERC20Token'
+  responses:
+    200:
+      description: Transaction was done successfully, all parameters were calculated.
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                $ref: '#/components/schemas/Estimate'
+    400:
+      $ref: '#/components/responses/invalidParameter'
+    500:
+      $ref: '#/components/responses/internalError'
