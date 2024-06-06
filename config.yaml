@@ -8,6 +8,11 @@ db:
 listener:
   addr: :8000
 
+# Routing config is used for deploying several service instances under one domain to differentiate them
+# by configurable prefix. Note that prefix should be formatted as `/integrations/configured-service-prefix/`
+routing:
+  prefix: "/integrations/configured-service-prefix/"
+
 airdrop:
   amount: amount
   token_address: erc20_token_address
@@ -21,7 +26,7 @@ broadcaster:
 verifier:
   verification_key_path: "./verification_key.json"
   allowed_age: 18
-  allowed_citizenships: ["UKR"]
+  allowed_citizenships: [ "UKR" ]
   allowed_event_id: "event_id"
   allowed_query_selector: "query_selector"
   # at least one of these should be correct to pass:
