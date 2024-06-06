@@ -1,5 +1,5 @@
 -- +migrate Up
-CREATE TYPE tx_status_enum AS ENUM ('pending', 'completed', 'failed');
+CREATE TYPE tx_status_enum AS ENUM ('pending', 'completed', 'failed', 'in progress');
 
 CREATE TABLE airdrops
 (
@@ -7,6 +7,7 @@ CREATE TABLE airdrops
     nullifier  text                        NOT NULL,
     address    text                        NOT NULL,
     tx_hash    text,
+    error      text,
     amount     text                        NOT NULL,
     status     tx_status_enum              NOT NULL,
     created_at timestamp without time zone NOT NULL DEFAULT NOW(),

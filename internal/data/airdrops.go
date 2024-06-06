@@ -11,9 +11,10 @@ import (
 )
 
 const (
-	TxStatusPending   = "pending"
-	TxStatusCompleted = "completed"
-	TxStatusFailed    = "failed"
+	TxStatusPending    = "pending"
+	TxStatusInProgress = "in progress"
+	TxStatusCompleted  = "completed"
+	TxStatusFailed     = "failed"
 )
 
 const airdropsTable = "airdrops"
@@ -23,6 +24,7 @@ type Airdrop struct {
 	Nullifier string    `db:"nullifier"`
 	Address   string    `db:"address"`
 	TxHash    *string   `db:"tx_hash"`
+	Error     *string   `db:"error"`
 	Amount    string    `db:"amount"`
 	Status    string    `db:"status"`
 	CreatedAt time.Time `db:"created_at"`
@@ -120,7 +122,7 @@ func (q *AirdropsQ) FilterByNullifier(nullifier string) *AirdropsQ {
 	return q
 }
 
-func (q *AirdropsQ) FilterByStatus(status string) *AirdropsQ {
-	q.selector = q.selector.Where(squirrel.Eq{"status": status})
+func (q *AirdropsQ) FilterByStatuses(statuses ...string) *AirdropsQ {
+	q.selector = q.selector.Where(squirrel.Eq{"status": statuses})
 	return q
 }

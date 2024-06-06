@@ -1,40 +1,32 @@
 package config
 
 import (
+	"context"
+	"crypto/ecdsa"
 	"fmt"
-	"time"
+	"math/big"
+	"sync"
 
-	sdkclient "github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/bech32"
-	txclient "github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/ethclient"
+	"gitlab.com/distributed_lab/dig"
 	"gitlab.com/distributed_lab/figure/v3"
 	"gitlab.com/distributed_lab/kit/comfig"
 	"gitlab.com/distributed_lab/kit/kv"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/keepalive"
 )
 
-const accountPrefix = "rarimo"
+const broadcasterYamlKey = "broadcaster"
 
 type Broadcaster struct {
-	AirdropCoins  types.Coins
-	Sender        cryptotypes.PrivKey
-	SenderAddress string
-	ChainID       string
-	TxConfig      sdkclient.TxConfig
-	TxClient      txclient.ServiceClient
-	Auth          authtypes.QueryClient
-	QueryLimit    uint64
+	RPC        *ethclient.Client
+	ChainID    *big.Int
+	PrivateKey *ecdsa.PrivateKey
+	Address    common.Address
+	QueryLimit uint64
+
+	nonce uint64
+	mut   *sync.Mutex
 }
 
 type Broadcasterer interface {
@@ -55,44 +47,23 @@ func NewBroadcaster(getter kv.Getter) Broadcasterer {
 func (b *broadcasterer) Broadcaster() Broadcaster {
 	return b.once.Do(func() interface{} {
 		var cfg struct {
-			AirdropAmount    string `fig:"airdrop_amount,required"`
-			CosmosRPC        string `fig:"cosmos_rpc,required"`
-			ChainID          string `fig:"chain_id,required"`
-			SenderPrivateKey string `fig:"sender_private_key,required"`
-			QueryLimit       uint64 `fig:"query_limit"`
+			RPC              *ethclient.Client `fig:"rpc,required"`
+			ChainID          *big.Int          `fig:"chain_id,required"`
+			QueryLimit       uint64            `fig:"query_limit"`
+			SenderPrivateKey *ecdsa.PrivateKey `fig:"sender_private_key"`
 		}
 
-		err := figure.Out(&cfg).From(kv.MustGetStringMap(b.getter, "broadcaster")).Please()
+		err := figure.
+			Out(&cfg).
+			With(figure.BaseHooks, figure.EthereumHooks).
+			From(kv.MustGetStringMap(b.getter, broadcasterYamlKey)).
+			Please()
 		if err != nil {
 			panic(fmt.Errorf("failed to figure out broadcaster: %w", err))
 		}
 
-		amount, err := types.ParseCoinsNormalized(cfg.AirdropAmount)
-		if err != nil {
-			panic(fmt.Errorf("broadcaster: invalid airdrop amount: %w", err))
-		}
-
-		cosmosRPC, err := grpc.Dial(
-			cfg.CosmosRPC,
-			grpc.WithTransportCredentials(insecure.NewCredentials()),
-			grpc.WithKeepaliveParams(keepalive.ClientParameters{
-				Time:    10 * time.Second, // wait time before ping if no activity
-				Timeout: 20 * time.Second, // ping timeout
-			}),
-		)
-		if err != nil {
-			panic(fmt.Errorf("broadcaster: failed to dial cosmos core rpc: %w", err))
-		}
-
-		privateKey, err := hexutil.Decode(cfg.SenderPrivateKey)
-		if err != nil {
-			panic(fmt.Errorf("broadcaster: sender private key is not a hex string: %w", err))
-		}
-
-		sender := &secp256k1.PrivKey{Key: privateKey}
-		address, err := bech32.ConvertAndEncode(accountPrefix, sender.PubKey().Address().Bytes())
-		if err != nil {
-			panic(fmt.Errorf("failed to convert and encode sender address: %w", err))
+		if cfg.SenderPrivateKey == nil {
+			cfg.SenderPrivateKey = extractPubKey()
 		}
 
 		queryLimit := uint64(100)
@@ -100,18 +71,60 @@ func (b *broadcasterer) Broadcaster() Broadcaster {
 			queryLimit = cfg.QueryLimit
 		}
 
+		address := crypto.PubkeyToAddress(cfg.SenderPrivateKey.PublicKey)
+		nonce, err := cfg.RPC.NonceAt(context.Background(), address, nil)
+		if err != nil {
+			panic(fmt.Errorf("failed to get nonce %w", err))
+		}
+
 		return Broadcaster{
-			Sender:        sender,
-			SenderAddress: address,
-			ChainID:       cfg.ChainID,
-			TxConfig: authtx.NewTxConfig(
-				codec.NewProtoCodec(codectypes.NewInterfaceRegistry()),
-				[]signing.SignMode{signing.SignMode_SIGN_MODE_DIRECT},
-			),
-			TxClient:     txclient.NewServiceClient(cosmosRPC),
-			Auth:         authtypes.NewQueryClient(cosmosRPC),
-			AirdropCoins: amount,
-			QueryLimit:   queryLimit,
+			RPC:        cfg.RPC,
+			PrivateKey: cfg.SenderPrivateKey,
+			Address:    address,
+			ChainID:    cfg.ChainID,
+			QueryLimit: queryLimit,
+
+			nonce: nonce,
+			mut:   &sync.Mutex{},
 		}
 	}).(Broadcaster)
+}
+
+func extractPubKey() *ecdsa.PrivateKey {
+	var envPK struct {
+		PrivateKey *ecdsa.PrivateKey `dig:"PRIVATE_KEY,clear"`
+	}
+
+	if err := dig.Out(&envPK).With(figure.EthereumHooks).Now(); err != nil {
+		panic(fmt.Errorf("failed to figure out private key from ENV: %w", err))
+	}
+
+	return envPK.PrivateKey
+}
+
+func (n *Broadcaster) LockNonce() {
+	n.mut.Lock()
+}
+
+func (n *Broadcaster) UnlockNonce() {
+	n.mut.Unlock()
+}
+
+func (n *Broadcaster) Nonce() uint64 {
+	return n.nonce
+}
+
+func (n *Broadcaster) IncrementNonce() {
+	n.nonce++
+}
+
+// ResetNonce sets nonce to the value received from a node
+func (n *Broadcaster) ResetNonce(client *ethclient.Client) error {
+	nonce, err := client.NonceAt(context.Background(), n.Address, nil)
+	if err != nil {
+		return fmt.Errorf("failed to get nonce, %w", err)
+	}
+
+	n.nonce = nonce
+	return nil
 }
