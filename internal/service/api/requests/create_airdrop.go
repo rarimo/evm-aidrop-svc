@@ -10,6 +10,8 @@ import (
 	"github.com/rarimo/evm-airdrop-svc/resources"
 )
 
+var ethAddrRegExp = regexp.MustCompile("^0x[0-9a-fA-F]{40}$")
+
 func NewCreateAirdrop(r *http.Request) (req resources.CreateAirdropRequest, err error) {
 	if err = json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return req, newDecodeError("body", err)
@@ -21,7 +23,7 @@ func NewCreateAirdrop(r *http.Request) (req resources.CreateAirdropRequest, err 
 		"data/attributes/address": val.Validate(
 			attr.Address,
 			val.Required,
-			val.Match(regexp.MustCompile("^0x[0-9a-fA-F]{40}$")),
+			val.Match(ethAddrRegExp),
 		),
 	}.Filter()
 }

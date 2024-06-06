@@ -1,0 +1,29 @@
+allOf:
+  - $ref: '#/components/schemas/TransferKey'
+  - type: object
+    x-go-is-request: true
+    required:
+      - attributes
+    properties:
+      attributes:
+        type: object
+        required:
+          - sender
+          - amount
+          - deadline
+        properties:
+          sender:
+            type: string
+            format: common.Address
+            description: EVM address FROM which tokens are transferred.
+            example: "0x9E65b5Fac5aD50B7daf51a0F8D8234Cd5658ef17"
+          amount:
+            type: integer
+            format: "*big.Int"
+            description: Transferred amount of tokens.
+            example: 8
+          deadline:
+            type: integer
+            format: "*big.Int"
+            description: UNIX UTC timestamp in the future till which permit signature may be used.
+            example: 1717015161

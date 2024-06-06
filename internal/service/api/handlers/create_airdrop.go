@@ -1,12 +1,17 @@
 package handlers
 
 import (
-	"errors"
+	stdErrors "errors"
+	"math/big"
 	"net/http"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/rarimo/evm-airdrop-svc/internal/data"
-	"github.com/rarimo/evm-airdrop-svc/internal/service/requests"
+	"github.com/rarimo/evm-airdrop-svc/internal/service/api"
+	"github.com/rarimo/evm-airdrop-svc/internal/service/api/models"
+	"github.com/rarimo/evm-airdrop-svc/internal/service/api/requests"
 	zk "github.com/rarimo/zkverifier-kit"
 	"github.com/rarimo/zkverifier-kit/identity"
 	"gitlab.com/distributed_lab/ape"
@@ -26,12 +31,12 @@ func CreateAirdrop(w http.ResponseWriter, r *http.Request) {
 
 	nullifier := req.Data.Attributes.ZkProof.PubSignals[zk.Nullifier]
 
-	airdrop, err := AirdropsQ(r).
+	airdrop, err := api.AirdropsQ(r).
 		FilterByNullifier(nullifier).
 		FilterByStatuses(data.TxStatusCompleted, data.TxStatusPending, data.TxStatusInProgress).
 		Get()
 	if err != nil {
-		Log(r).WithError(err).Error("Failed to get airdrop by nullifier")
+		api.Log(r).WithError(err).Error("Failed to get airdrop by nullifier")
 		ape.RenderErr(w, problems.InternalError())
 		return
 	}
@@ -42,38 +47,47 @@ func CreateAirdrop(w http.ResponseWriter, r *http.Request) {
 
 	decodedAddress, err := hexutil.Decode(req.Data.Attributes.Address)
 	if err != nil {
-		Log(r).WithError(err).WithFields(logan.F{
+		api.Log(r).WithError(err).WithFields(logan.F{
 			"address": req.Data.Attributes.Address,
 		}).Error("Failed to decode hex ethereum address")
 		ape.RenderErr(w, problems.InternalError())
 		return
 	}
 
-	err = Verifier(r).VerifyProof(req.Data.Attributes.ZkProof, zk.WithEventData(decodedAddress))
+	err = api.Verifier(r).VerifyProof(req.Data.Attributes.ZkProof, zk.WithEventData(decodedAddress))
 	if err != nil {
-		if errors.Is(err, identity.ErrContractCall) {
-			Log(r).WithError(err).Error("Failed to verify proof")
+		if stdErrors.Is(err, identity.ErrContractCall) {
+			api.Log(r).WithError(err).Error("Failed to verify proof")
 			ape.RenderErr(w, problems.InternalError())
 			return
 		}
 
-		Log(r).WithError(err).Info("Invalid proof")
+		api.Log(r).WithError(err).Info("Invalid proof")
 		ape.RenderErr(w, problems.BadRequest(err)...)
 		return
 	}
 
-	airdrop, err = AirdropsQ(r).Insert(data.Airdrop{
+	tokenDecimals, err := api.ERC20Permit(r).Decimals(&bind.CallOpts{})
+	if err != nil {
+		api.Log(r).WithError(err).WithFields(logan.F{
+			"address": api.AirdropConfig(r).TokenAddress,
+		}).Error("failed to get token decimals")
+		ape.RenderErr(w, problems.InternalError())
+		return
+	}
+
+	airdrop, err = api.AirdropsQ(r).Insert(data.Airdrop{
 		Nullifier: nullifier,
 		Address:   req.Data.Attributes.Address,
-		Amount:    AirdropAmount(r),
+		Amount:    new(big.Int).Mul(api.AirdropConfig(r).Amount, math.BigPow(10, int64(tokenDecimals))).String(),
 		Status:    data.TxStatusPending,
 	})
 	if err != nil {
-		Log(r).WithError(err).Errorf("Failed to insert airdrop")
+		api.Log(r).WithError(err).Errorf("Failed to insert airdrop")
 		ape.RenderErr(w, problems.InternalError())
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	ape.Render(w, toAirdropResponse(*airdrop))
+	ape.Render(w, models.NewAirdropResponse(*airdrop))
 }

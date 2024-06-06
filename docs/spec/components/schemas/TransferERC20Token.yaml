@@ -1,0 +1,51 @@
+allOf:
+  - $ref: '#/components/schemas/TransferKey'
+  - type: object
+    x-go-is-request: true
+    required:
+      - attributes
+    properties:
+      attributes:
+        type: object
+        required:
+          - sender
+          - receiver
+          - amount
+          - deadline
+          - r
+          - v
+          - s
+        properties:
+          sender:
+            type: string
+            format: common.Address
+            description: EVM address FROM which tokens are transferred.
+            example: "0x9E65b5Fac5aD50B7daf51a0F8D8234Cd5658ef17"
+          receiver:
+            type: string
+            format: common.Address
+            description: EVM address TO which tokens are transferred.
+            example: "0xBF8080a3FE79bf5e13F28BB743AEC11442365dB0"
+          amount:
+            type: integer
+            format: "*big.Int"
+            description: Transferred amount of tokens.
+            example: 8
+          deadline:
+            type: integer
+            format: "*big.Int"
+            description: UNIX UTC timestamp in the future till which permit signature may be used.
+            example: 1717015161
+          r:
+            type: string
+            description: Hex encoded permit the x coordinate of R value of the signature.
+            example: "0xaec2aac837bbe808ab9b2b994e6c0bf93ce751d0cef7f4c882f9c0125eb0809c"
+          s:
+            type: string
+            description: Hex encoded permit the x coordinate of S value of the signature.
+            example: "0x5548ffb8ba6a610ec2f02d75a8ec80c428ed2e07a9bdfd5716af24adb4c2c58f"
+          v:
+            type: integer
+            format: uint8
+            description: The parity of the y coordinate of R.
+            example: 28

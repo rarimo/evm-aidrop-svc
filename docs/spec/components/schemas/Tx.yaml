@@ -1,0 +1,27 @@
+allOf:
+  - $ref: '#/components/schemas/TransferKey'
+  - type: object
+    required:
+      - attributes
+    properties:
+      attributes:
+        type: object
+        required:
+          - hash
+          - amount
+          - fee
+        properties:
+          hash:
+            type: string
+            description: Transfer transaction hash.
+            example: "0x1b06e10120aab3caee20ca69498de8a52eb977b39fa9811dea9592ea3b3d2985"
+          amount:
+            type: integer
+            format: int64
+            description: Amount of tokens that was transferred to the destination.
+            example: 6
+          fee:
+            type: integer
+            format: int64
+            description: Amount of tokens that was drawn ass fee expenses.
+            example: 2

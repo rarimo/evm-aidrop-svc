@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/rarimo/evm-airdrop-svc/internal/data"
+	"github.com/rarimo/evm-airdrop-svc/internal/service/api"
 	"gitlab.com/distributed_lab/kit/pgdb"
 )
 
@@ -20,7 +21,7 @@ func DBCloneMiddleware(db *pgdb.DB) func(http.Handler) http.Handler {
 			ctx := r.Context()
 
 			extenders := []ctxExtender{
-				CtxAirdropsQ(data.NewAirdropsQ(clone)),
+				api.CtxAirdropsQ(data.NewAirdropsQ(clone)),
 			}
 
 			for _, extender := range extenders {
