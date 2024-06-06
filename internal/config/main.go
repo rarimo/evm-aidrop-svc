@@ -16,6 +16,7 @@ type Config struct {
 
 	airdrop  comfig.Once
 	verifier comfig.Once
+	routing  comfig.Once
 	getter   kv.Getter
 }
 
