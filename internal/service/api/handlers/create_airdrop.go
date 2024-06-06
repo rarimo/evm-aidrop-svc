@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/rarimo/evm-airdrop-svc/internal/data"
 	"github.com/rarimo/evm-airdrop-svc/internal/service/api"
@@ -44,7 +45,16 @@ func CreateAirdrop(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = api.Verifier(r).VerifyProof(req.Data.Attributes.ZkProof, zk.WithEthereumAddress(req.Data.Attributes.Address))
+	decodedAddress, err := hexutil.Decode(req.Data.Attributes.Address)
+	if err != nil {
+		api.Log(r).WithError(err).WithFields(logan.F{
+			"address": req.Data.Attributes.Address,
+		}).Error("Failed to decode hex ethereum address")
+		ape.RenderErr(w, problems.InternalError())
+		return
+	}
+
+	err = api.Verifier(r).VerifyProof(req.Data.Attributes.ZkProof, zk.WithEventData(decodedAddress))
 	if err != nil {
 		if stdErrors.Is(err, identity.ErrContractCall) {
 			api.Log(r).WithError(err).Error("Failed to verify proof")
