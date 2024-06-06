@@ -20,7 +20,7 @@ airdrop:
 broadcaster:
   rpc: evm_rpc_url
   chain_id: chain_id
-  sender_private_key: priv_key
+  sender_private_key: priv_key # optional field, may be set via ENV through the PRIVATE_KEY variable
   query_limit: 10
   erc20_permit_transfer: contract_address
   gas_multiplier: 1.1
