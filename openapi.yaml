@@ -7,7 +7,7 @@ servers:
   - url: 'https://api.stage.rarime.com'
     description: TokenD Developer Environment
 paths:
-  /integrations/airdrop-svc/airdrops:
+  /integrations/evm-airdrop-svc/airdrops:
     post:
       tags:
         - Airdrop
@@ -46,7 +46,7 @@ paths:
                 $ref: '#/components/schemas/Errors'
         '500':
           $ref: '#/components/responses/internalError'
-  '/integrations/airdrop-svc/airdrops/{nullifier}':
+  '/integrations/evm-airdrop-svc/airdrops/{nullifier}':
     get:
       tags:
         - Airdrop
@@ -84,7 +84,7 @@ paths:
                 $ref: '#/components/schemas/Errors'
         '500':
           $ref: '#/components/responses/internalError'
-  /integrations/airdrop-svc/airdrops/params:
+  /integrations/evm-airdrop-svc/airdrops/params:
     get:
       tags:
         - Airdrop
@@ -102,6 +102,140 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/AirdropParams'
+  /integrations/evm-airdrop-svc/transfer:
+    post:
+      tags:
+        - Transfer
+      summary: Send ERC20 transfer
+      description: |
+        Creates and sends multicall transaction with transfer. Service takes signature from requester creates transaction and sends it in the network. This call consists of:
+         - Permit - allows service sender to transfer from requester account 
+         - Transfer #1 - sends tokens to the desired address
+         - Transfer #2 - sends part from tokens to the sender address to cover fees expenses. Transaction is created, but  not awaited.
+      operationId: SendTransfer
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  $ref: '#/components/schemas/TransferERC20Token'
+      responses:
+        '201':
+          description: 'Transfer was created, transaction was sent'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Tx'
+        '400':
+          $ref: '#/components/responses/invalidParameter'
+        '500':
+          $ref: '#/components/responses/internalError'
+    get:
+      tags:
+        - Transfer
+      summary: Get transfer params
+      description: 'Returns ERC20 transfer with multicall parameters. Takes all requried parameters for permit and transfer,  simulates transaction and returns the calculated values'
+      operationId: GetTransferParams
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  $ref: '#/components/schemas/TransferERC20Token'
+      responses:
+        '200':
+          description: 'Transaction was done successfully, all parameters were calculated.'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Estimate'
+        '400':
+          $ref: '#/components/responses/invalidParameter'
+        '500':
+          $ref: '#/components/responses/internalError'
+  /integrations/evm-airdrop-svc/transfer/permit-hash:
+    post:
+      tags:
+        - Transfer
+      summary: Build Permit hash
+      description: 'Endpoint that build message hash for permit transfer, that has to be signer by token owner to permit transfer. This message is built according to the ERC-2612 standard.'
+      operationId: SendTransfer
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  $ref: '#/components/schemas/BuildPermitHash'
+      responses:
+        '200':
+          description: Created permit hash
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PermitHash'
+        '400':
+          $ref: '#/components/responses/invalidParameter'
+        '500':
+          $ref: '#/components/responses/internalError'
+    get:
+      tags:
+        - Transfer
+      summary: Get transfer params
+      description: 'Returns ERC20 transfer with multicall parameters. Takes all requried parameters for permit and transfer,  simulates transaction and returns the calculated values'
+      operationId: GetTransferParams
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  $ref: '#/components/schemas/TransferERC20Token'
+      responses:
+        '200':
+          description: 'Transaction was done successfully, all parameters were calculated.'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Estimate'
+        '400':
+          $ref: '#/components/responses/invalidParameter'
+        '500':
+          $ref: '#/components/responses/internalError'
 components:
   schemas:
     Airdrop:
@@ -194,6 +328,36 @@ components:
                   type: string
                   description: Query selector that is used for proof generation
                   example: 123
+    BuildPermitHash:
+      allOf:
+        - $ref: '#/components/schemas/TransferKey'
+        - type: object
+          x-go-is-request: true
+          required:
+            - attributes
+          properties:
+            attributes:
+              type: object
+              required:
+                - sender
+                - amount
+                - deadline
+              properties:
+                sender:
+                  type: string
+                  format: common.Address
+                  description: EVM address FROM which tokens are transferred.
+                  example: '0x9E65b5Fac5aD50B7daf51a0F8D8234Cd5658ef17'
+                amount:
+                  type: integer
+                  format: '*big.Int'
+                  description: Transferred amount of tokens.
+                  example: 8
+                deadline:
+                  type: integer
+                  format: '*big.Int'
+                  description: UNIX UTC timestamp in the future till which permit signature may be used.
+                  example: 1717015161
     CreateAirdrop:
       allOf:
         - $ref: '#/components/schemas/CreateAirdropKey'
@@ -260,6 +424,134 @@ components:
                   - 404
                   - 409
                   - 500
+    Estimate:
+      allOf:
+        - $ref: '#/components/schemas/TransferKey'
+        - type: object
+          required:
+            - attributes
+          properties:
+            attributes:
+              type: object
+              required:
+                - amount
+                - fee
+              properties:
+                amount:
+                  type: integer
+                  format: int64
+                  description: Amount of tokens that will be transferred to the destination.
+                  example: 6
+                fee:
+                  type: integer
+                  format: int64
+                  description: Amount of tokens that will be drawn ass fee expenses.
+                  example: 2
+    PermitHash:
+      allOf:
+        - $ref: '#/components/schemas/TransferKey'
+        - type: object
+          required:
+            - attributes
+          properties:
+            attributes:
+              type: object
+              required:
+                - hash
+              properties:
+                hash:
+                  type: string
+                  description: Permit message hash built by ERC-2612 standard that has to be signed by token owner.
+                  example: '0x3f77218a74501051ac9f069e73523519e6a6cf34783811515da5a178e86634ca'
+    TransferERC20Token:
+      allOf:
+        - $ref: '#/components/schemas/TransferKey'
+        - type: object
+          x-go-is-request: true
+          required:
+            - attributes
+          properties:
+            attributes:
+              type: object
+              required:
+                - sender
+                - receiver
+                - amount
+                - deadline
+                - r
+                - v
+                - s
+              properties:
+                sender:
+                  type: string
+                  format: common.Address
+                  description: EVM address FROM which tokens are transferred.
+                  example: '0x9E65b5Fac5aD50B7daf51a0F8D8234Cd5658ef17'
+                receiver:
+                  type: string
+                  format: common.Address
+                  description: EVM address TO which tokens are transferred.
+                  example: '0xBF8080a3FE79bf5e13F28BB743AEC11442365dB0'
+                amount:
+                  type: integer
+                  format: '*big.Int'
+                  description: Transferred amount of tokens.
+                  example: 8
+                deadline:
+                  type: integer
+                  format: '*big.Int'
+                  description: UNIX UTC timestamp in the future till which permit signature may be used.
+                  example: 1717015161
+                r:
+                  type: string
+                  description: Hex encoded permit the x coordinate of R value of the signature.
+                  example: '0xaec2aac837bbe808ab9b2b994e6c0bf93ce751d0cef7f4c882f9c0125eb0809c'
+                s:
+                  type: string
+                  description: Hex encoded permit the x coordinate of S value of the signature.
+                  example: '0x5548ffb8ba6a610ec2f02d75a8ec80c428ed2e07a9bdfd5716af24adb4c2c58f'
+                v:
+                  type: integer
+                  format: uint8
+                  description: The parity of the y coordinate of R.
+                  example: 28
+    TransferKey:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum:
+            - transfer_erc20
+    Tx:
+      allOf:
+        - $ref: '#/components/schemas/TransferKey'
+        - type: object
+          required:
+            - attributes
+          properties:
+            attributes:
+              type: object
+              required:
+                - hash
+                - amount
+                - fee
+              properties:
+                hash:
+                  type: string
+                  description: Transfer transaction hash.
+                  example: '0x1b06e10120aab3caee20ca69498de8a52eb977b39fa9811dea9592ea3b3d2985'
+                amount:
+                  type: integer
+                  format: int64
+                  description: Amount of tokens that was transferred to the destination.
+                  example: 6
+                fee:
+                  type: integer
+                  format: int64
+                  description: Amount of tokens that was drawn ass fee expenses.
+                  example: 2
   responses:
     internalError:
       description: Internal server error
