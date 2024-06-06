@@ -25,10 +25,12 @@ func Run(ctx context.Context, cfg *config.Config) {
 		),
 		handlers.DBCloneMiddleware(cfg.DB()),
 	)
-	r.Route("/integrations/evm-airdrop-svc/airdrops", func(r chi.Router) {
-		r.Post("/", handlers.CreateAirdrop)
-		r.Get("/{nullifier}", handlers.GetAirdrop)
-		r.Get("/params", handlers.GetAirdropParams)
+	r.Route(cfg.NewRouting().Prefix, func(r chi.Router) {
+		r.Route("/airdrops", func(r chi.Router) {
+			r.Post("/", handlers.CreateAirdrop)
+			r.Get("/{nullifier}", handlers.GetAirdrop)
+			r.Get("/params", handlers.GetAirdropParams)
+		})
 	})
 
 	cfg.Log().Info("Service started")
