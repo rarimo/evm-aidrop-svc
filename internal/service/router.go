@@ -42,6 +42,7 @@ func Run(ctx context.Context, cfg *config.Config) {
 		),
 		handlers.DBCloneMiddleware(cfg.DB()),
 	)
+
 	r.Route("/integrations/evm-airdrop-svc", func(r chi.Router) {
 		r.Route("/airdrops", func(r chi.Router) {
 			r.Post("/", handlers.CreateAirdrop)
@@ -52,6 +53,8 @@ func Run(ctx context.Context, cfg *config.Config) {
 		r.Route("/transfer", func(r chi.Router) {
 			r.Post("/", handlers.SendTransfer)
 			r.Get("/", handlers.GetTransferParams)
+
+			r.Post("/permit-hash", handlers.BuildPermitHash)
 		})
 	})
 
