@@ -12,7 +12,7 @@
     }
   ],
   "paths": {
-    "/integrations/evm-airdrop-svc/airdrops": {
+    "/airdrops": {
       "post": {
         "tags": [
           "Airdrop"
@@ -75,7 +75,7 @@
         }
       }
     },
-    "/integrations/evm-airdrop-svc/airdrops/{nullifier}": {
+    "/airdrops/{nullifier}": {
       "get": {
         "tags": [
           "Airdrop"
@@ -135,7 +135,7 @@
         }
       }
     },
-    "/integrations/evm-airdrop-svc/airdrops/params": {
+    "/airdrops/params": {
       "get": {
         "tags": [
           "Airdrop"
@@ -164,7 +164,7 @@
         }
       }
     },
-    "/integrations/evm-airdrop-svc/transfer": {
+    "/transfer": {
       "post": {
         "tags": [
           "Transfer"
@@ -268,7 +268,7 @@
         }
       }
     },
-    "/integrations/evm-airdrop-svc/transfer/permit-hash": {
+    "/transfer/permit-hash": {
       "post": {
         "tags": [
           "Transfer"

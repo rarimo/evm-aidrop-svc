@@ -7,7 +7,7 @@ servers:
   - url: 'https://api.stage.rarime.com'
     description: TokenD Developer Environment
 paths:
-  /integrations/evm-airdrop-svc/airdrops:
+  /airdrops:
     post:
       tags:
         - Airdrop
@@ -46,7 +46,7 @@ paths:
                 $ref: '#/components/schemas/Errors'
         '500':
           $ref: '#/components/responses/internalError'
-  '/integrations/evm-airdrop-svc/airdrops/{nullifier}':
+  '/airdrops/{nullifier}':
     get:
       tags:
         - Airdrop
@@ -84,7 +84,7 @@ paths:
                 $ref: '#/components/schemas/Errors'
         '500':
           $ref: '#/components/responses/internalError'
-  /integrations/evm-airdrop-svc/airdrops/params:
+  /airdrops/params:
     get:
       tags:
         - Airdrop
@@ -102,7 +102,7 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/AirdropParams'
-  /integrations/evm-airdrop-svc/transfer:
+  /transfer:
     post:
       tags:
         - Transfer
@@ -171,7 +171,7 @@ paths:
           $ref: '#/components/responses/invalidParameter'
         '500':
           $ref: '#/components/responses/internalError'
-  /integrations/evm-airdrop-svc/transfer/permit-hash:
+  /transfer/permit-hash:
     post:
       tags:
         - Transfer
