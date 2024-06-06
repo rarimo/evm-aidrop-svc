@@ -1,0 +1,15 @@
+allOf:
+  - $ref: '#/components/schemas/TransferKey'
+  - type: object
+    required:
+      - attributes
+    properties:
+      attributes:
+        type: object
+        required:
+          - hash
+        properties:
+          hash:
+            type: string
+            description: Permit message hash built by ERC-2612 standard that has to be signed by token owner.
+            example: "0x3f77218a74501051ac9f069e73523519e6a6cf34783811515da5a178e86634ca"
