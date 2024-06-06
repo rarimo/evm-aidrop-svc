@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"math/big"
 	"net/http"
 	"regexp"
 	"time"
@@ -12,7 +11,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/crypto"
 	val "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/rarimo/evm-airdrop-svc/internal/service/api"
@@ -44,16 +42,11 @@ func NewTransferERC20Token(r *http.Request) (req resources.TransferErc20TokenReq
 		return req, err
 	}
 
-	decimals := math.BigPow(1, 18)
-	attr.Amount = new(big.Int).Mul(req.Data.Attributes.Amount, decimals)
-
 	if err = VerifyPermitSignature(r, attr); err != nil {
 		return req, val.Errors{
 			"signature": errors.Wrap(err, "invalid permit signature"),
 		}
 	}
-
-	req.Data.Attributes.Amount = new(big.Int).Mul(req.Data.Attributes.Amount, decimals)
 
 	return req, nil
 }
