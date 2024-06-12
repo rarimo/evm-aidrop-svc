@@ -2298,6 +2298,8 @@ gitlab.com/distributed_lab/lorem v0.2.1 h1:A1QoiEDRN3vlPrwsXJmPlENanQwu3FxpDl5vE
 gitlab.com/distributed_lab/lorem v0.2.1/go.mod h1:wkzrGoB1L/yUBu56SfoJ/vNiPqiHZcg75AnBkWNcjhQ=
 gitlab.com/distributed_lab/running v1.6.0 h1:O2GQHgYkpNRDbobR11atOCH2rhS1okNKyadiAqi+kQI=
 gitlab.com/distributed_lab/running v1.6.0/go.mod h1:4TnADX84dQjQMRHKIMPCVL0L97rD/Jxv0xDbrN6aKzk=
+gitlab.com/distributed_lab/urlval v3.0.0+incompatible h1:OWU3CcZU+z0BVooufOSQFO9biDfsjM3e7YYauC278HU=
+gitlab.com/distributed_lab/urlval v3.0.0+incompatible/go.mod h1:cKnUlnZCHUuke/l95YLvW5JoGC2yn53HVgF9rt1WiIg=
 go.etcd.io/bbolt v1.3.7 h1:j+zJOnnEjF/kyHlDDgGnVL/AIqIJPq8UoB2GSNfkUfQ=
 go.etcd.io/bbolt v1.3.7/go.mod h1:N9Mkw9X8x5fupy0IKsmuqVtoGDyxsaDlbk4Rd05IAQw=
 go.etcd.io/etcd/api/v3 v3.5.10/go.mod h1:TidfmT4Uycad3NM/o25fG3J07odo4GBB9hoxaodFCtI=
