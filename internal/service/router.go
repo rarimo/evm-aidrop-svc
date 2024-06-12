@@ -55,6 +55,10 @@ func Run(ctx context.Context, cfg *config.Config) {
 
 			r.Post("/permit-hash", handlers.BuildPermitHash)
 		})
+
+		r.Route("/token", func(r chi.Router) {
+			r.Get("/balance", handlers.GetBalance)
+		})
 	})
 
 	cfg.Log().Info("Service started")
