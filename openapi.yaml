@@ -102,6 +102,35 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/AirdropParams'
+  /token/balance:
+    get:
+      tags:
+        - Tokens
+      summary: Get Balance
+      description: Get token's balance by the given user address
+      operationId: GetBalance
+      parameters:
+        - in: query
+          name: address
+          required: true
+          schema:
+            type: string
+            format: common.Address
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Balance'
+        '400':
+          $ref: '#/components/responses/invalidParameter'
+        '500':
+          $ref: '#/components/responses/internalError'
   /transfer:
     post:
       tags:
@@ -328,6 +357,23 @@ components:
                   type: string
                   description: Query selector that is used for proof generation
                   example: 123
+    Balance:
+      allOf:
+        - $ref: '#/components/schemas/TokenKey'
+        - type: object
+          required:
+            - attributes
+          properties:
+            attributes:
+              type: object
+              required:
+                - amount
+              properties:
+                amount:
+                  type: integer
+                  format: '*big.Int'
+                  description: Amount of the tokens on the user address
+                  example: '123'
     BuildPermitHash:
       allOf:
         - $ref: '#/components/schemas/TransferKey'
@@ -463,6 +509,18 @@ components:
                   type: string
                   description: Permit message hash built by ERC-2612 standard that has to be signed by token owner.
                   example: '0x3f77218a74501051ac9f069e73523519e6a6cf34783811515da5a178e86634ca'
+    TokenKey:
+      type: object
+      required:
+        - id
+        - type
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum:
+            - token
     TransferERC20Token:
       allOf:
         - $ref: '#/components/schemas/TransferKey'

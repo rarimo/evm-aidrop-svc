@@ -164,6 +164,52 @@
         }
       }
     },
+    "/token/balance": {
+      "get": {
+        "tags": [
+          "Tokens"
+        ],
+        "summary": "Get Balance",
+        "description": "Get token's balance by the given user address",
+        "operationId": "GetBalance",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "common.Address"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Balance"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/invalidParameter"
+          },
+          "500": {
+            "$ref": "#/components/responses/internalError"
+          }
+        }
+      }
+    },
     "/transfer": {
       "post": {
         "tags": [
@@ -504,6 +550,35 @@
           }
         ]
       },
+      "Balance": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/TokenKey"
+          },
+          {
+            "type": "object",
+            "required": [
+              "attributes"
+            ],
+            "properties": {
+              "attributes": {
+                "type": "object",
+                "required": [
+                  "amount"
+                ],
+                "properties": {
+                  "amount": {
+                    "type": "integer",
+                    "format": "*big.Int",
+                    "description": "Amount of the tokens on the user address",
+                    "example": "123"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
       "BuildPermitHash": {
         "allOf": [
           {
@@ -706,6 +781,24 @@
             }
           }
         ]
+      },
+      "TokenKey": {
+        "type": "object",
+        "required": [
+          "id",
+          "type"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "token"
+            ]
+          }
+        }
       },
       "TransferERC20Token": {
         "allOf": [
