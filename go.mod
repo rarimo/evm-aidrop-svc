@@ -123,6 +123,7 @@ require (
 	github.com/tklauser/numcpus v0.6.1 // indirect
 	gitlab.com/distributed_lab/figure v2.1.2+incompatible // indirect
 	gitlab.com/distributed_lab/lorem v0.2.1 // indirect
+	gitlab.com/distributed_lab/urlval v3.0.0+incompatible // indirect
 	go.etcd.io/bbolt v1.3.7 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.22.0 // indirect
