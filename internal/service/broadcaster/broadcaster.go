@@ -9,9 +9,8 @@ import (
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/rarimo/evm-airdrop-svc/contracts"
 	"github.com/rarimo/evm-airdrop-svc/internal/config"
 	"github.com/rarimo/evm-airdrop-svc/internal/data"
 	"gitlab.com/distributed_lab/logan/v3"
@@ -19,27 +18,29 @@ import (
 	"gitlab.com/distributed_lab/running"
 )
 
-const (
-	byteSize            = 32
-	transferFnSignature = "transfer(address,uint256)"
-)
-
 type Runner struct {
 	log *logan.Entry
 	q   *data.AirdropsQ
 	config.Broadcaster
 	config.AirdropConfig
+	erc20 *contracts.ERC20Permit
 }
 
 func Run(ctx context.Context, cfg *config.Config) {
 	log := cfg.Log().WithField("service", "builtin-broadcaster")
 	log.Info("Starting service")
 
+	erc20Permit, err := contracts.NewERC20Permit(cfg.AirdropConfig().TokenAddress, cfg.Broadcaster().RPC)
+	if err != nil {
+		panic(errors.Wrap(err, "failed to init erc20 permit transfer contract"))
+	}
+
 	r := &Runner{
 		log:           log,
 		q:             data.NewAirdropsQ(cfg.DB().Clone()),
 		Broadcaster:   cfg.Broadcaster(),
 		AirdropConfig: cfg.AirdropConfig(),
+		erc20:         erc20Permit,
 	}
 
 	running.WithBackOff(ctx, r.log, "builtin-broadcaster", r.run, 5*time.Second, 5*time.Second, 5*time.Second)
@@ -93,27 +94,14 @@ func (r *Runner) handlePending(ctx context.Context, airdrop data.Airdrop) (err e
 }
 
 func (r *Runner) genTx(ctx context.Context, airdrop data.Airdrop) (*types.Transaction, error) {
-	receiver := common.HexToAddress(airdrop.Address)
-	txData := r.buildTransferTx(airdrop)
-
-	gasPrice, gasLimit, err := r.getGasCosts(ctx, receiver, txData)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get gas costs: %w", err)
+	bigAmount, ok := new(big.Int).SetString(airdrop.Amount, 10)
+	if !ok {
+		return nil, fmt.Errorf("failed to parse amount: %s", airdrop.Amount)
 	}
 
-	tx, err := types.SignNewTx(
-		r.PrivateKey,
-		types.NewCancunSigner(r.ChainID),
-		&types.LegacyTx{
-			Nonce:    r.Nonce(),
-			Gas:      gasLimit,
-			GasPrice: gasPrice,
-			To:       &receiver,
-			Data:     txData,
-		},
-	)
+	tx, err := r.getTransferTx(ctx, common.HexToAddress(airdrop.Address), bigAmount)
 	if err != nil {
-		return nil, fmt.Errorf("failed to sign new tx: %w", err)
+		return nil, fmt.Errorf("failed to get transfer params: %w", err)
 	}
 
 	return tx, nil
@@ -147,10 +135,12 @@ func (r *Runner) waitForTransactionMined(ctx context.Context, transaction *types
 			if err != nil {
 				log.WithError(err).WithField("transaction", transaction).Error("failed to get tx error")
 				r.updateAirdropStatus(ctx, airdrop.ID, transaction.Hash().String(), data.TxStatusFailed, err)
+				return
 			}
 
 			log.WithError(err).WithField("transaction", transaction).Error("transaction was mined with failed status")
 			r.updateAirdropStatus(ctx, airdrop.ID, transaction.Hash().String(), data.TxStatusFailed, txErr)
+			return
 		}
 
 		r.updateAirdropStatus(ctx, airdrop.ID, transaction.Hash().String(), data.TxStatusCompleted, nil)
@@ -204,36 +194,27 @@ func (r *Runner) updateAirdropStatus(ctx context.Context, id, txHash, status str
 	}, 2*time.Second, 10*time.Second)
 }
 
-func (r *Runner) buildTransferTx(airdrop data.Airdrop) []byte {
-	methodID := hexutil.Encode(crypto.Keccak256([]byte(transferFnSignature))[:4])
-	paddedAddress := common.LeftPadBytes(common.HexToAddress(airdrop.Address).Bytes(), byteSize)
-	paddedAmount := common.LeftPadBytes(r.Amount.Bytes(), byteSize)
-
-	var txData []byte
-	txData = append(txData, methodID...)
-	txData = append(txData, paddedAddress...)
-	txData = append(txData, paddedAmount...)
-
-	return txData
-}
-
-func (r *Runner) getGasCosts(
+func (r *Runner) getTransferTx(
 	ctx context.Context,
 	receiver common.Address,
-	txData []byte,
-) (gasPrice *big.Int, gasLimit uint64, err error) {
-	gasPrice, err = r.RPC.SuggestGasPrice(ctx)
+	amount *big.Int,
+) (tx *types.Transaction, err error) {
+	gasPrice, err := r.RPC.SuggestGasPrice(ctx)
 	if err != nil {
-		return nil, 0, errors.Wrap(err, "failed to suggest gas price")
+		return nil, errors.Wrap(err, "failed to suggest gas price")
 	}
 
-	gasLimit, err = r.RPC.EstimateGas(ctx, ethereum.CallMsg{
-		To:       &receiver,
-		GasPrice: gasPrice,
-		Data:     txData,
-	})
+	txOptions, err := bind.NewKeyedTransactorWithChainID(r.PrivateKey, r.ChainID)
 	if err != nil {
-		return nil, 0, errors.Wrap(err, "failed to estimate gas limit")
+		return nil, errors.Wrap(err, "failed to get tx options")
+	}
+	txOptions.NoSend = true
+	txOptions.Nonce = new(big.Int).SetUint64(r.Nonce())
+	txOptions.GasPrice = gasPrice
+
+	tx, err = r.erc20.Transfer(txOptions, receiver, amount)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to simulate transfer tx")
 	}
 
 	return

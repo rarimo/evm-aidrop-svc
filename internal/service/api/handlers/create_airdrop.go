@@ -2,12 +2,9 @@ package handlers
 
 import (
 	stdErrors "errors"
-	"math/big"
 	"net/http"
 
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/rarimo/evm-airdrop-svc/internal/data"
 	"github.com/rarimo/evm-airdrop-svc/internal/service/api"
 	"github.com/rarimo/evm-airdrop-svc/internal/service/api/models"
@@ -67,19 +64,10 @@ func CreateAirdrop(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenDecimals, err := api.ERC20Permit(r).Decimals(&bind.CallOpts{})
-	if err != nil {
-		api.Log(r).WithError(err).WithFields(logan.F{
-			"address": api.AirdropConfig(r).TokenAddress,
-		}).Error("failed to get token decimals")
-		ape.RenderErr(w, problems.InternalError())
-		return
-	}
-
 	airdrop, err = api.AirdropsQ(r).Insert(data.Airdrop{
 		Nullifier: nullifier,
 		Address:   req.Data.Attributes.Address,
-		Amount:    new(big.Int).Mul(api.AirdropConfig(r).Amount, math.BigPow(10, int64(tokenDecimals))).String(),
+		Amount:    api.AirdropConfig(r).Amount.String(),
 		Status:    data.TxStatusPending,
 	})
 	if err != nil {

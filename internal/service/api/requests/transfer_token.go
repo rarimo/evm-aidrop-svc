@@ -3,7 +3,6 @@ package requests
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"regexp"
 	"time"
@@ -87,8 +86,6 @@ func VerifyPermitSignature(r *http.Request, attrs resources.TransferErc20TokenAt
 	recoveredAddr := crypto.PubkeyToAddress(*pubKey)
 
 	if !bytes.Equal(recoveredAddr.Bytes(), attrs.Sender.Bytes()) {
-		fmt.Println(recoveredAddr.Hex())
-		fmt.Println(attrs.Sender.Hex())
 		return errors.New("recovered pubkey is invalid")
 	}
 
