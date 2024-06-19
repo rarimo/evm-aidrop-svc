@@ -58,6 +58,7 @@ func Run(ctx context.Context, cfg *config.Config) {
 
 		r.Route("/token", func(r chi.Router) {
 			r.Get("/balance", handlers.GetBalance)
+			r.Get("/details", handlers.GetTokenDetails)
 		})
 	})
 

@@ -1,0 +1,21 @@
+get:
+  tags:
+    - Tokens
+  summary: Get details
+  description: Get service token's details
+  operationId: GetDetails
+  responses:
+    200:
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                $ref: '#/components/schemas/TokenDetails'
+    400:
+      $ref: '#/components/responses/invalidParameter'
+    500:
+      $ref: '#/components/responses/internalError'

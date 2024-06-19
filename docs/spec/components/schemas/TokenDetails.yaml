@@ -1,0 +1,31 @@
+allOf:
+  - $ref: '#/components/schemas/TokenKey'
+  - type: object
+    required:
+      - attributes
+    properties:
+      attributes:
+        type: object
+        required:
+          - name
+          - symbol
+          - decimals
+          - image
+        properties:
+          name:
+            type: string
+            description: ERC20 token name
+            example: "USD Dollar"
+          symbol:
+            type: string
+            description: ERC20 token symbol
+            example: "USDD"
+          decimals:
+            type: integer
+            format: uint8
+            description: ERC20 token decimals
+            example: 12
+          image:
+            type: string
+            description: ERC20 token symbol image
+            example: "https://image_link/usdd.png"
