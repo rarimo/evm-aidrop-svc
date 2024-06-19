@@ -2,6 +2,7 @@ package config
 
 import (
 	"math/big"
+	"net/url"
 
 	"github.com/ethereum/go-ethereum/common"
 	"gitlab.com/distributed_lab/figure/v3"
@@ -20,6 +21,7 @@ type AirdropConfiger interface {
 type AirdropConfig struct {
 	Amount       *big.Int       `fig:"amount,required"`
 	TokenAddress common.Address `fig:"token_address,required"`
+	TokenImage   *url.URL       `fig:"token_image,required"`
 }
 
 type airdrop struct {
